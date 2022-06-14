@@ -1,0 +1,55 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Photon.Pun;
+public class MovimentoPUNPlataforma2D : MonoBehaviourPun
+{
+    public PhotonView pv;
+    Rigidbody2D rb;
+    public float moveSpeed = 10, jumpForce = 1000;
+    bool isGrounded = true;
+    public SpriteRenderer sprite;
+
+    void Start()
+    {
+        if (photonView.IsMine == true)
+        {
+            rb = GetComponent<Rigidbody2D>();
+            sprite = GetComponent<SpriteRenderer>();
+        }
+    }
+    public void Mover()
+    {
+        var move = new Vector3(Input.GetAxis("Horizontal"), 0);
+        transform.position += move * moveSpeed * Time.deltaTime;
+        if (move.x > 0)
+        {
+            sprite.flipX = false;
+            pv.RPC("OnDirectionChange_Right", RpcTarget.Others);
+        }
+        if (move.x < 0)
+        {
+            sprite.flipX = true;
+            pv.RPC("OnDirectionChange_Left", RpcTarget.Others);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        {
+            Jump();
+        }
+    }
+    void Jump()
+    {
+        rb.AddForce(Vector2.up * jumpForce);
+    }
+    [PunRPC]
+    void OnDirectionChange_Left()
+    {
+        sprite.flipX = true;
+    }
+    [PunRPC]
+    void OnDirectionChange_Right()
+    {
+        sprite.flipX = false;
+    }
+}
